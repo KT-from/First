@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>貸出管理</title>
+</head>
+<body style="margin:0;font-family:sans-serif;background:#f3f4f6;display:flex;justify-content:center;padding-top:40px;">
+<div style="background:white;padding:30px;border-radius:16px;width:90%;max-width:420px;text-align:center;box-shadow:0 10px 25px rgba(0,0,0,0.1);">
+  <h2 id="title">🔋</h2>
+    <div style="background:#fff3cd;border:1px solid #ffe69c;color:#664d03;border-radius:10px;padding:12px;margin-bottom:16px;font-size:14px;text-align:left;">
+    ⚠️ 17:50までに必ずコモンズセントラルに返却してください
+  </div>
+  <p style="text-align:left;">学籍番号</p>
+  <input id="user" placeholder="例：a601022336"
+    style="width:100%;padding:14px;font-size:16px;border:1px solid #ccc;border-radius:10px;box-sizing:border-box;">
+  <div id="msg" style="margin-top:12px;font-size:15px;"></div>
+  <div style="margin-top:20px;display:flex;flex-direction:column;gap:10px;">
+    <button onclick="submit('rent')" style="padding:14px;font-size:16px;border:none;border-radius:10px;background:#3b82f6;color:white;font-weight:bold;">貸出</button>
+    <button onclick="submit('return')" style="padding:14px;font-size:16px;border:none;border-radius:10px;background:#10b981;color:white;font-weight:bold;">返却</button>
+  </div>
+</div>
+<script>
+const params = new URLSearchParams(location.search);
+const type = params.get("type") || "";
+const no   = params.get("no") || "";
+
+const labels = { battery: "バッテリー", "Type-C": "Type-Cケーブル", lightning: "ライトニングケーブル" };
+document.getElementById("title").textContent = "🔋 " + (labels[type] || type) + " " + no;
+
+async function submit(action) {
+  const user = document.getElementById("user").value.trim();
+  const msg  = document.getElementById("msg");
+
+  if (!user) {
+    msg.style.color = "red";
+    msg.textContent = "⚠️ 学籍番号を入力してください";
+    return;
+  }
+  if (!/^[a-zA-Z]\d{9}$/.test(user)) {
+    msg.style.color = "red";
+    msg.textContent = "⚠️ 学籍番号は英字1文字＋数字9桁で入力してください";
+    return;
+  }
+
+  msg.style.color = "gray";
+  msg.textContent = "送信中...";
+
+  const res = await fetch("/api/action", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ type, no, user, action })
+  });
+
+  const data = await res.json();
+  msg.style.color = data.ok ? "green" : "red";
+  msg.textContent = data.message;
+}
+</script>
+</body>
+</html>
